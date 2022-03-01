@@ -36,7 +36,7 @@
       var file = receber_inputfile[0].files[0];
       formData.append('file', file);
       $('#loading').show();
-      return ;
+
       $.ajax({
         url: '?ng=contaazul_csv/app/receber-post',
         data: formData,
