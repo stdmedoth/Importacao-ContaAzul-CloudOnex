@@ -14,6 +14,10 @@
         </div>
         <div class="form-group">
           <button type="submit" name="button" class='btn btn-primary'>Importar</button>
+
+          <div id="loading" class="spinner-grow text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
         </div>
       </form>
     </div>
@@ -23,13 +27,16 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script type="text/javascript">
   $(document).ready(function(){
+    $('#loading').hide();
+
     $("#receber_form").on('submit', function(e){
       e.preventDefault();
       var formData = new FormData(e.target);
       var receber_inputfile = $("#receber_inputfile");
       var file = receber_inputfile[0].files[0];
       formData.append('file', file);
-
+      $('#loading').show();
+      return ;
       $.ajax({
         url: '?ng=contaazul_csv/app/receber-post',
         data: formData,
@@ -40,6 +47,8 @@
         method: 'POST',
       })
         .done(function(response){
+          $('#loading').hide();
+
           if(response.status != "ok"){
             toastr.error(response.message);
             return ;
@@ -47,6 +56,8 @@
           toastr.success(response.message);
         })
           .fail(function(){
+            $('#loading').hide();
+
             toastr.error('Ocorreu um erro desconhecido');
           });
 

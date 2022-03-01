@@ -17,7 +17,6 @@ switch ($element) {
 
 		break;
 	case 'receber-post':
-		require 'models/ContaAzulReceber.php';
 
 		if(!isset($_FILES['file'])){
 			echo json_encode([
@@ -47,6 +46,13 @@ switch ($element) {
 
 		if (($handle = fopen($arquivo['tmp_name'], "r")) !== FALSE) {
 		    while (($data = fgetcsv($handle, 20000, ";")) !== FALSE) {
+					if(count($data)!=25){
+						echo json_encode([
+							"status" => "error",
+							"message" => "Quantidade incorreta de colunas na linha $row"
+						]);
+						return ;
+					}
 					if($row !== 1){
 						$conta_azul_receber = ORM::for_table('conta_azul_tratativa_receber')->create();
 						$conta_azul_receber->id_cliente = $data[0];
@@ -132,7 +138,7 @@ switch ($element) {
 
 		echo json_encode([
 			"status" => "ok",
-			"message" => "recebido com sucesso"
+			"message" => "Arquivo recebido e importado com sucesso"
 		]);
 		break;
 
@@ -143,9 +149,127 @@ switch ($element) {
 
 		break;
 	case 'pagar-post':
+		if(!isset($_FILES['file'])){
+			echo json_encode([
+				"status" => "error",
+				"message" => "Insira o arquivo csv"
+			]);
+			return ;
+		}
+
+		$arquivo = $_FILES['file'];
+		$ext = pathinfo($arquivo['name'], PATHINFO_EXTENSION);
+		if( $ext != "csv" ){
+			echo json_encode([
+				"status" => "error",
+				"message" => "Insira o arquivo  do tipo csv"
+			]);
+			return ;
+		}
+		$row = 1;
+		$conta_azul_pagar = ORM::for_table('conta_azul_tratativa_pagar');
+		$conta_azul_pagar->delete_many();
+		$sys_cats = ORM::for_table('sys_cats')->where(['type' => 'Expense']);
+		$sys_cats->delete_many();
+		$sys_transactions = ORM::for_table('sys_transactions')->where(['type' => 'Expense']);
+		$sys_transactions->delete_many();
+
+
+		if (($handle = fopen($arquivo['tmp_name'], "r")) !== FALSE) {
+				while (($data = fgetcsv($handle, 20000, ";")) !== FALSE) {
+					if(count($data)!=25){
+						echo json_encode([
+							"status" => "error",
+							"message" => "Quantidade incorreta de colunas na linha $row"
+						]);
+						return ;
+					}
+					if($row !== 1){
+						$conta_azul_pagar = ORM::for_table('conta_azul_tratativa_pagar')->create();
+						$conta_azul_pagar->id_fornecedor = $data[0];
+						$conta_azul_pagar->nome_fornecedor = $data[1];
+						$conta_azul_pagar->cod_referencia = $data[2];
+						$conta_azul_pagar->data_lancamento = $data[3];
+						$conta_azul_pagar->data_prevista_pagamento = $data[4];
+						$conta_azul_pagar->descricao = $data[5];
+						$conta_azul_pagar->valor_original = $data[6];
+						$conta_azul_pagar->forma_pagamento = $data[7];
+						$conta_azul_pagar->valor_pago = $data[8];
+						$conta_azul_pagar->juros_realizado = $data[9];
+						$conta_azul_pagar->multa_realizada = $data[10];
+						$conta_azul_pagar->desconto_realizado = $data[11];
+						$conta_azul_pagar->valor_total_pago = $data[12];
+						$conta_azul_pagar->valor_parcela_aberto = $data[13];
+						$conta_azul_pagar->juros_previsto = $data[14];
+						$conta_azul_pagar->multa_prevista = $data[15];
+						$conta_azul_pagar->desconto_previsto = $data[16];
+						$conta_azul_pagar->valor_total_aberto_parcela = $data[17];
+						$conta_azul_pagar->conta_bancaria = $data[18];
+						$conta_azul_pagar->data_ultimo_pagamento = $data[19];
+						$conta_azul_pagar->observacoes = $data[20];
+						$conta_azul_pagar->categoria1 = $data[21];
+						$conta_azul_pagar->valor_cat1 = $data[22];
+						$conta_azul_pagar->centro_custo = $data[23];
+						$conta_azul_pagar->valor_centro1 = $data[24];
+						if(!$conta_azul_pagar->save()){
+							echo json_encode([
+								"status" => "error",
+								"message" => "Erro ao importar linha $row"
+							]);
+							return ;
+						}
+					}
+					$row++;
+				}
+				fclose($handle);
+
+				$query_accounts = "INSERT INTO sys_accounts(account, description)
+														SELECT catr.conta_bancaria , catr.conta_bancaria
+														FROM conta_azul_tratativa_pagar catr
+														WHERE (SELECT id FROM sys_accounts sa WHERE account COLLATE utf8_unicode_ci like CONCAT(catr.conta_bancaria , '%%') LIMIT 1) IS NULL
+														GROUP BY catr.conta_bancaria ;";
+				ORM::get_db()->exec($query_accounts);
+
+				$query_cats = "INSERT INTO sys_cats(name, type, sorder, total_amount)
+														SELECT catr.categoria1, 'Expense', 0, 0  from conta_azul_tratativa_pagar catr
+														WHERE  catr.categoria1 NOT IN(SELECT name  COLLATE utf8_unicode_ci  FROM sys_cats sc )
+														GROUP BY  catr.categoria1;";
+				ORM::get_db()->exec($query_cats);
+
+				$query_transactions = "INSERT INTO sys_transactions(
+																account,
+																account_id,
+																type,
+																category,
+																amount,
+																dr,
+																status,
+																description,
+																date,
+																currency_iso_code
+															)SELECT
+																	catr.conta_bancaria,
+																	(SELECT id FROM sys_accounts sa WHERE account COLLATE utf8_unicode_ci like CONCAT(catr.conta_bancaria, '%%') ),
+																	'Expense',
+																	catr.categoria1 ,
+																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	CASE
+																		WHEN catr.valor_original  = catr.valor_total_pago  THEN 'Cleared'
+																		ELSE 'Uncleared'
+																	END status,
+																	catr.descricao ,
+																	STR_TO_DATE(catr.data_lancamento , '%%d/%%m/%%Y'),
+																	'BRL'
+																FROM conta_azul_tratativa_pagar catr;";
+
+				ORM::get_db()->exec($query_transactions);
+
+		}
+
 		echo json_encode([
 			"status" => "ok",
-			"message" => "recebido com sucesso"
+			"message" => "Arquivo recebido e importado com sucesso"
 		]);
 		break;
 }
