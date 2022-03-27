@@ -22,8 +22,8 @@ function load() {
                                             ->where('shortname', 'contaazul')
                                             ->find_one();
 
-        if( (isset($x->can_view) && $x->can_view) ||  (!$user->roleid) ){
-            add_menu_admin(' Conta Azul Import ', U . 'contaazul_csv/app', 'contaazul', $sgv_menu_icon , 2, [
+        if( (isset($x->can_view) && $x->can_view) ||  (!$user->roleid) ) {
+            add_menu_admin(' &nbsp;&nbsp;&nbsp;Conta Azul Import ', U . 'contaazul_csv/app', 'contaazul', $sgv_menu_icon , 2, [
                 [
                     'name' => 'Receber',
                     'link' => U . 'contaazul_csv/app/receber',
