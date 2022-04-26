@@ -127,13 +127,13 @@ switch ($element) {
 																	(SELECT id FROM sys_accounts sa WHERE account COLLATE utf8_unicode_ci like CONCAT(catr.conta_bancaria, '%')  LIMIT 1 ),
 																	'Income',
 																	catr.categoria1 ,
-																	catr.valor_original,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	catr.valor_original,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- catr.valor_original,
+																	 REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- catr.valor_original,
+																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
 																	CASE
-																		-- WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
-																		WHEN catr.valor_total_aberto_parcela = 0
+																		 WHEN REPLACE(REPLACE(catr.data_prevista_pagamento, '.', ''), ',', '.') = 0
+																		-- WHEN catr.valor_total_aberto_parcela = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
 																	END status,
@@ -286,18 +286,18 @@ switch ($element) {
 																	(SELECT id FROM sys_accounts sa WHERE account COLLATE utf8_unicode_ci like CONCAT(catr.conta_bancaria, '%')  LIMIT 1),
 																	'Expense',
 																	catr.categoria1 ,
-																	catr.valor_original,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	catr.valor_original,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- catr.valor_original,
+																	 REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- catr.valor_original,
+																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
 																	CASE
-																		-- WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
-																		WHEN catr.valor_total_aberto_parcela = 0
+																		WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
+																		-- WHEN catr.valor_total_aberto_parcela = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
 																	END status,
 																	catr.descricao ,
-																	STR_TO_DATE(catr.data_lancamento , '%d/%m/%Y'),
+																	STR_TO_DATE(catr.data_prevista_pagamento , '%d/%m/%Y'),
 																	'BRL'
 																FROM conta_azul_tratativa_pagar catr;";
 
