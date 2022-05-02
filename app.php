@@ -55,35 +55,36 @@ switch ($element) {
 					}
 					if($row !== 1){
 						$conta_azul_receber = ORM::for_table('conta_azul_tratativa_receber')->create();
-						$conta_azul_receber->id_cliente = $data[0];
-						$conta_azul_receber->nome_cliente = $data[1];
-						$conta_azul_receber->cod_referencia = $data[2];
-						$conta_azul_receber->data_lancamento = $data[3];
+						$col = 0;
+						$conta_azul_receber->id_cliente = $data[$col++];
+						$conta_azul_receber->nome_cliente = $data[$col++];
+						$conta_azul_receber->cod_referencia = $data[$col++];
+						$conta_azul_receber->data_lancamento = $data[$col++];
 						//$conta_azul_receber->data_vencimento = $data[4];
-
-						$conta_azul_receber->data_prevista_recebimento = $data[4];
+						$col++;
+						$conta_azul_receber->data_prevista_recebimento = $data[$col++];
 						//$conta_azul_receber->data_prevista_recebimento = $data[5];
-
-						$conta_azul_receber->descricao = $data[6];
-						$conta_azul_receber->valor_original = $data[7];
-						$conta_azul_receber->forma_recebimento = $data[8];
-						$conta_azul_receber->valor_recebido = $data[9];
-						$conta_azul_receber->juros_realizado = $data[10];
-						$conta_azul_receber->multa_realizada = $data[11];
-						$conta_azul_receber->desconto_realizado = $data[12];
-						$conta_azul_receber->valor_total_recebido = $data[13];
-						$conta_azul_receber->valor_parcela_aberto = $data[14];
-						$conta_azul_receber->juros_previsto = $data[15];
-						$conta_azul_receber->multa_prevista = $data[16];
-						$conta_azul_receber->desconto_previsto = $data[17];
-						$conta_azul_receber->valor_total_aberto_parcela = $data[18];
-						$conta_azul_receber->conta_bancaria = $data[19];
-						$conta_azul_receber->data_ultimo_pagamento = $data[20];
-						$conta_azul_receber->observacoes = $data[21];
-						$conta_azul_receber->categoria1 = $data[22];
-						$conta_azul_receber->valor_cat1 = $data[23];
-						$conta_azul_receber->centro_custo = $data[24];
-						$conta_azul_receber->valor_centro1 = $data[25];
+						$col++;
+						$conta_azul_receber->descricao = $data[$col++];
+						$conta_azul_receber->valor_original = $data[$col++];
+						$conta_azul_receber->forma_recebimento = $data[$col++];
+						$conta_azul_receber->valor_recebido = $data[$col++];
+						$conta_azul_receber->juros_realizado = $data[$col++];
+						$conta_azul_receber->multa_realizada = $data[$col++];
+						$conta_azul_receber->desconto_realizado = $data[$col++];
+						$conta_azul_receber->valor_total_recebido = $data[$col++];
+						$conta_azul_receber->valor_parcela_aberto = $data[$col++];
+						$conta_azul_receber->juros_previsto = $data[$col++];
+						$conta_azul_receber->multa_prevista = $data[$col++];
+						$conta_azul_receber->desconto_previsto = $data[$col++];
+						$conta_azul_receber->valor_total_aberto_parcela = $data[$col++];
+						$conta_azul_receber->conta_bancaria = $data[$col++];
+						$conta_azul_receber->data_ultimo_pagamento = $data[$col++];
+						$conta_azul_receber->observacoes = $data[$col++];
+						$conta_azul_receber->categoria1 = $data[$col++];
+						$conta_azul_receber->valor_cat1 = $data[$col++];
+						$conta_azul_receber->centro_custo = $data[$col++];
+						$conta_azul_receber->valor_centro1 = $data[$col++];
 						if(!$conta_azul_receber->save()){
 							echo json_encode([
 								"status" => "error",
@@ -128,17 +129,20 @@ switch ($element) {
 																	'Income',
 																	catr.categoria1 ,
 																	-- catr.valor_original,
-																	 REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	REPLACE(catr.valor_original, ',', ''),
 																	-- catr.valor_original,
-																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	REPLACE(catr.valor_original, ',', ''),
 																	CASE
-																		 WHEN REPLACE(REPLACE(catr.data_prevista_pagamento, '.', ''), ',', '.') = 0
+																		-- WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
+																		WHEN REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
 																		-- WHEN catr.valor_total_aberto_parcela = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
 																	END status,
 																	catr.descricao ,
-																	STR_TO_DATE(catr.data_lancamento , '%d/%m/%Y'),
+																	STR_TO_DATE(catr.data_prevista_recebimento , '%d/%m/%Y'),
 																	'BRL'
 																FROM conta_azul_tratativa_receber catr;";
 
@@ -213,36 +217,37 @@ switch ($element) {
 						return ;
 					}
 					if($row !== 1){
+						$col = 0;
 						$conta_azul_pagar = ORM::for_table('conta_azul_tratativa_pagar')->create();
-						$conta_azul_pagar->id_fornecedor = $data[0];
-						$conta_azul_pagar->nome_fornecedor = $data[1];
-						$conta_azul_pagar->cod_referencia = $data[2];
-						$conta_azul_pagar->data_lancamento = $data[3];
+						$conta_azul_pagar->id_fornecedor = $data[$col++];
+						$conta_azul_pagar->nome_fornecedor = $data[$col++];
+						$conta_azul_pagar->cod_referencia = $data[$col++];
+						$conta_azul_pagar->data_lancamento = $data[$col++];
 						//$conta_azul_pagar->data_vencimento = $data[4];
-
-						$conta_azul_pagar->data_prevista_pagamento = $data[4];
+						$col++;
+						$conta_azul_pagar->data_prevista_pagamento = $data[$col++];
 						//$conta_azul_pagar->data_prevista_pagamento = $data[5];
-
-						$conta_azul_pagar->descricao = $data[6];
-						$conta_azul_pagar->valor_original = $data[7];
-						$conta_azul_pagar->forma_pagamento = $data[8];
-						$conta_azul_pagar->valor_pago = $data[9];
-						$conta_azul_pagar->juros_realizado = $data[10];
-						$conta_azul_pagar->multa_realizada = $data[11];
-						$conta_azul_pagar->desconto_realizado = $data[12];
-						$conta_azul_pagar->valor_total_pago = $data[13];
-						$conta_azul_pagar->valor_parcela_aberto = $data[14];
-						$conta_azul_pagar->juros_previsto = $data[15];
-						$conta_azul_pagar->multa_prevista = $data[16];
-						$conta_azul_pagar->desconto_previsto = $data[17];
-						$conta_azul_pagar->valor_total_aberto_parcela = $data[18];
-						$conta_azul_pagar->conta_bancaria = $data[19];
-						$conta_azul_pagar->data_ultimo_pagamento = $data[20];
-						$conta_azul_pagar->observacoes = $data[21];
-						$conta_azul_pagar->categoria1 = $data[22];
-						$conta_azul_pagar->valor_cat1 = $data[23];
-						$conta_azul_pagar->centro_custo = $data[24];
-						$conta_azul_pagar->valor_centro1 = $data[25];
+						$col++;
+						$conta_azul_pagar->descricao = $data[$col++];
+						$conta_azul_pagar->valor_original = $data[$col++];
+						$conta_azul_pagar->forma_pagamento = $data[$col++];
+						$conta_azul_pagar->valor_pago = $data[$col++];
+						$conta_azul_pagar->juros_realizado = $data[$col++];
+						$conta_azul_pagar->multa_realizada = $data[$col++];
+						$conta_azul_pagar->desconto_realizado = $data[$col++];
+						$conta_azul_pagar->valor_total_pago = $data[$col++];
+						$conta_azul_pagar->valor_parcela_aberto = $data[$col++];
+						$conta_azul_pagar->juros_previsto = $data[$col++];
+						$conta_azul_pagar->multa_prevista = $data[$col++];
+						$conta_azul_pagar->desconto_previsto = $data[$col++];
+						$conta_azul_pagar->valor_total_aberto_parcela = $data[$col++];
+						$conta_azul_pagar->conta_bancaria = $data[$col++];
+						$conta_azul_pagar->data_ultimo_pagamento = $data[$col++];
+						$conta_azul_pagar->observacoes = $data[$col++];
+						$conta_azul_pagar->categoria1 = $data[$col++];
+						$conta_azul_pagar->valor_cat1 = $data[$col++];
+						$conta_azul_pagar->centro_custo = $data[$col++];
+						$conta_azul_pagar->valor_centro1 = $data[$col++];
 						if(!$conta_azul_pagar->save()){
 							echo json_encode([
 								"status" => "error",
@@ -287,11 +292,14 @@ switch ($element) {
 																	'Expense',
 																	catr.categoria1 ,
 																	-- catr.valor_original,
-																	 REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	REPLACE(catr.valor_original, ',', ''),
 																	-- catr.valor_original,
-																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	REPLACE(catr.valor_original, ',', ''),
 																	CASE
-																		WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
+																		-- WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
+																		WHEN REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
 																		-- WHEN catr.valor_total_aberto_parcela = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
