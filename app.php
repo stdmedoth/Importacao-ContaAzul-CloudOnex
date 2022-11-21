@@ -6,8 +6,7 @@ $plugin_link = "?ng=contaazul_csv/app/";
 $element = route(2);
 $action = route(3);
 $id = route(4);
-
-
+$user = User::_info();
 
 switch ($element) {
 	case 'receber':
@@ -43,57 +42,56 @@ switch ($element) {
 		$sys_transactions = ORM::for_table('sys_transactions')->where(['type' => 'Income']);
 		$sys_transactions->delete_many();
 
-
+		$COLUMNS_QNT = 28;
 		if (($handle = fopen($arquivo['tmp_name'], "r")) !== FALSE) {
 		    while (($data = fgetcsv($handle, 20000, ";")) !== FALSE) {
-					if(count($data)<25){
+				if(count($data)!=$COLUMNS_QNT){
+					echo json_encode([
+						"status" => "error",
+						"message" => "Quantidade incorreta de colunas na linha $row"
+					]);
+					return ;
+				}
+				if($row !== 1){
+					$conta_azul_receber = ORM::for_table('conta_azul_tratativa_receber')->create();
+					$col = 0;
+					$conta_azul_receber->id_cliente = $data[$col++];
+					$conta_azul_receber->nome_cliente = $data[$col++];
+					$conta_azul_receber->cod_referencia = $data[$col++];
+					$conta_azul_receber->data_lancamento = $data[$col++];
+					$col++; // data vencimento
+					$conta_azul_receber->data_prevista_recebimento = $data[$col++];
+					$col++; // recorrencia
+					$conta_azul_receber->descricao = $data[$col++];
+					$col++; // agendado
+					$conta_azul_receber->valor_original = $data[$col++];
+					$conta_azul_receber->forma_recebimento = $data[$col++];
+					$conta_azul_receber->valor_recebido = $data[$col++];
+					$conta_azul_receber->juros_realizado = $data[$col++];
+					$conta_azul_receber->multa_realizada = $data[$col++];
+					$conta_azul_receber->desconto_realizado = $data[$col++];
+					$conta_azul_receber->valor_total_recebido = $data[$col++];
+					$conta_azul_receber->valor_parcela_aberto = $data[$col++];
+					$conta_azul_receber->juros_previsto = $data[$col++];
+					$conta_azul_receber->multa_prevista = $data[$col++];
+					$conta_azul_receber->desconto_previsto = $data[$col++];
+					$conta_azul_receber->valor_total_aberto_parcela = $data[$col++];
+					$conta_azul_receber->conta_bancaria = $data[$col++];
+					$conta_azul_receber->data_ultimo_pagamento = $data[$col++];
+					$conta_azul_receber->observacoes = $data[$col++];
+					$conta_azul_receber->categoria1 = $data[$col++];
+					$conta_azul_receber->valor_cat1 = $data[$col++];
+					$conta_azul_receber->centro_custo = $data[$col++];
+					$conta_azul_receber->valor_centro1 = $data[$col++];
+					if(!$conta_azul_receber->save()){
 						echo json_encode([
 							"status" => "error",
-							"message" => "Quantidade incorreta de colunas na linha $row"
+							"message" => "Erro ao importar linha $row"
 						]);
 						return ;
 					}
-					if($row !== 1){
-						$conta_azul_receber = ORM::for_table('conta_azul_tratativa_receber')->create();
-						$col = 0;
-						$conta_azul_receber->id_cliente = $data[$col++];
-						$conta_azul_receber->nome_cliente = $data[$col++];
-						$conta_azul_receber->cod_referencia = $data[$col++];
-						$conta_azul_receber->data_lancamento = $data[$col++];
-						//$conta_azul_receber->data_vencimento = $data[4];
-						$col++;
-						$conta_azul_receber->data_prevista_recebimento = $data[$col++];
-						//$conta_azul_receber->data_prevista_recebimento = $data[5];
-						$col++;
-						$conta_azul_receber->descricao = $data[$col++];
-						$conta_azul_receber->valor_original = $data[$col++];
-						$conta_azul_receber->forma_recebimento = $data[$col++];
-						$conta_azul_receber->valor_recebido = $data[$col++];
-						$conta_azul_receber->juros_realizado = $data[$col++];
-						$conta_azul_receber->multa_realizada = $data[$col++];
-						$conta_azul_receber->desconto_realizado = $data[$col++];
-						$conta_azul_receber->valor_total_recebido = $data[$col++];
-						$conta_azul_receber->valor_parcela_aberto = $data[$col++];
-						$conta_azul_receber->juros_previsto = $data[$col++];
-						$conta_azul_receber->multa_prevista = $data[$col++];
-						$conta_azul_receber->desconto_previsto = $data[$col++];
-						$conta_azul_receber->valor_total_aberto_parcela = $data[$col++];
-						$conta_azul_receber->conta_bancaria = $data[$col++];
-						$conta_azul_receber->data_ultimo_pagamento = $data[$col++];
-						$conta_azul_receber->observacoes = $data[$col++];
-						$conta_azul_receber->categoria1 = $data[$col++];
-						$conta_azul_receber->valor_cat1 = $data[$col++];
-						$conta_azul_receber->centro_custo = $data[$col++];
-						$conta_azul_receber->valor_centro1 = $data[$col++];
-						if(!$conta_azul_receber->save()){
-							echo json_encode([
-								"status" => "error",
-								"message" => "Erro ao importar linha $row"
-							]);
-							return ;
-						}
-					}
-		      $row++;
+				}
+		    	$row++;
 		    }
 		    fclose($handle);
 
@@ -121,7 +119,8 @@ switch ($element) {
 																status,
 																description,
 																date,
-																currency_iso_code
+																currency_iso_code,
+																aid
 															)SELECT
 																	NULL,
 																	catr.conta_bancaria,
@@ -129,21 +128,21 @@ switch ($element) {
 																	'Income',
 																	catr.categoria1 ,
 																	-- catr.valor_original,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	REPLACE(catr.valor_original, ',', ''),
-																	-- catr.valor_original,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	REPLACE(catr.valor_original, ',', ''),
+																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- REPLACE(catr.valor_original, ',', ''),
+																	-- REPLACE(catr.valor_original, ',', ''),
+																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
 																	CASE
-																		-- WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
-																		WHEN REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
+																		WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
+																		-- WHEN REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
 																		-- WHEN catr.valor_total_aberto_parcela = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
 																	END status,
 																	catr.descricao ,
 																	STR_TO_DATE(catr.data_prevista_recebimento , '%d/%m/%Y'),
-																	'BRL'
+																	'BRL',
+																	{$user->id}
 																FROM conta_azul_tratativa_receber catr;";
 
 				ORM::get_db()->exec($query_transactions);
@@ -206,10 +205,10 @@ switch ($element) {
 		$sys_transactions = ORM::for_table('sys_transactions')->where(['type' => 'Expense']);
 		$sys_transactions->delete_many();
 
-
+		$COLUMNS_QNT = 30;
 		if (($handle = fopen($arquivo['tmp_name'], "r")) !== FALSE) {
 				while (($data = fgetcsv($handle, 20000, ";")) !== FALSE) {
-					if(count($data)<25){
+					if(count($data)!=$COLUMNS_QNT){
 						echo json_encode([
 							"status" => "error",
 							"message" => "Quantidade incorreta de colunas na linha $row"
@@ -224,11 +223,11 @@ switch ($element) {
 						$conta_azul_pagar->cod_referencia = $data[$col++];
 						$conta_azul_pagar->data_lancamento = $data[$col++];
 						//$conta_azul_pagar->data_vencimento = $data[4];
-						$col++;
+						$col++; //vencimento
 						$conta_azul_pagar->data_prevista_pagamento = $data[$col++];
-						//$conta_azul_pagar->data_prevista_pagamento = $data[5];
-						$col++;
+						$col++; // recorrencia
 						$conta_azul_pagar->descricao = $data[$col++];
+						$col++; // agendado
 						$conta_azul_pagar->valor_original = $data[$col++];
 						$conta_azul_pagar->forma_pagamento = $data[$col++];
 						$conta_azul_pagar->valor_pago = $data[$col++];
@@ -284,29 +283,30 @@ switch ($element) {
 																status,
 																description,
 																date,
-																currency_iso_code
+																currency_iso_code,
+																aid
 															)SELECT
 																	NULL,
 																	catr.conta_bancaria,
 																	(SELECT id FROM sys_accounts sa WHERE account COLLATE utf8_unicode_ci like CONCAT(catr.conta_bancaria, '%')  LIMIT 1),
 																	'Expense',
 																	catr.categoria1 ,
+																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- REPLACE(catr.valor_original, ',', ''),
 																	-- catr.valor_original,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	REPLACE(catr.valor_original, ',', ''),
-																	-- catr.valor_original,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	REPLACE(catr.valor_original, ',', ''),
+																	-- REPLACE(catr.valor_original, ',', ''),
+																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
 																	CASE
-																		-- WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
-																		WHEN REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
+																		WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
+																		-- WHEN REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
 																		-- WHEN catr.valor_total_aberto_parcela = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
 																	END status,
 																	catr.descricao ,
 																	STR_TO_DATE(catr.data_prevista_pagamento , '%d/%m/%Y'),
-																	'BRL'
+																	'BRL',
+																	{$user->id}
 																FROM conta_azul_tratativa_pagar catr;";
 
 				ORM::get_db()->exec($query_transactions);
