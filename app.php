@@ -128,13 +128,14 @@ switch ($element) {
 																	'Income',
 																	catr.categoria1 ,
 																	-- catr.valor_original,
-																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	-- REPLACE(catr.valor_original, ',', ''),
-																	-- REPLACE(catr.valor_original, ',', ''),
-																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	REPLACE(catr.valor_original, ',', ''),
+																	REPLACE(catr.valor_original, ',', ''),
+																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
 																	CASE
-																		WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
-																		-- WHEN REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
+																		WHEN
+																		-- WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
+																		REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
 																		-- WHEN catr.valor_total_aberto_parcela = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
@@ -205,7 +206,7 @@ switch ($element) {
 		$sys_transactions = ORM::for_table('sys_transactions')->where(['type' => 'Expense']);
 		$sys_transactions->delete_many();
 
-		$COLUMNS_QNT = 30;
+		$COLUMNS_QNT = 36;
 		if (($handle = fopen($arquivo['tmp_name'], "r")) !== FALSE) {
 				while (($data = fgetcsv($handle, 20000, ";")) !== FALSE) {
 					if(count($data)!=$COLUMNS_QNT){
@@ -291,14 +292,15 @@ switch ($element) {
 																	(SELECT id FROM sys_accounts sa WHERE account COLLATE utf8_unicode_ci like CONCAT(catr.conta_bancaria, '%')  LIMIT 1),
 																	'Expense',
 																	catr.categoria1 ,
-																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	-- REPLACE(catr.valor_original, ',', ''),
+																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	REPLACE(catr.valor_original, ',', ''),
 																	-- catr.valor_original,
-																	-- REPLACE(catr.valor_original, ',', ''),
-																	REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	REPLACE(catr.valor_original, ',', ''),
+																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
 																	CASE
-																		WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
-																		-- WHEN REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
+																		WHEN 
+																		-- REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
+																		REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
 																		-- WHEN catr.valor_total_aberto_parcela = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
