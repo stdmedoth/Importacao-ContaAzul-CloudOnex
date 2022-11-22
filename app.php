@@ -8,6 +8,21 @@ $action = route(3);
 $id = route(4);
 $user = User::_info();
 
+const USA_MONEY = "USA_MONEY";
+const BR_MONEY = "BR_MONEY";
+
+$values_type = BR_MONEY;
+
+if($values_type == USA_MONEY){
+	$_valor_original_format = "REPLACE(catr.valor_original, ',', '')" ;
+	$_valor_total_aberto_format = "REPLACE(catr.valor_total_aberto_parcela, ',', '')";
+}
+
+if($values_type == BR_MONEY){
+	$_valor_original_format = "REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.')";
+	$_valor_total_aberto_format = "REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.')";
+}
+
 switch ($element) {
 	case 'receber':
     view('app_wrapper', [
@@ -127,16 +142,10 @@ switch ($element) {
 																	(SELECT id FROM sys_accounts sa WHERE account COLLATE utf8_unicode_ci like CONCAT(catr.conta_bancaria, '%')  LIMIT 1 ),
 																	'Income',
 																	catr.categoria1 ,
-																	-- catr.valor_original,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	REPLACE(catr.valor_original, ',', ''),
-																	REPLACE(catr.valor_original, ',', ''),
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	{$_valor_original_format},
+																	{$_valor_original_format},
 																	CASE
-																		WHEN
-																		-- WHEN REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
-																		REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
-																		-- WHEN catr.valor_total_aberto_parcela = 0
+																		WHEN {$_valor_total_aberto_format} = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
 																	END status,
@@ -292,16 +301,10 @@ switch ($element) {
 																	(SELECT id FROM sys_accounts sa WHERE account COLLATE utf8_unicode_ci like CONCAT(catr.conta_bancaria, '%')  LIMIT 1),
 																	'Expense',
 																	catr.categoria1 ,
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
-																	REPLACE(catr.valor_original, ',', ''),
-																	-- catr.valor_original,
-																	REPLACE(catr.valor_original, ',', ''),
-																	-- REPLACE(REPLACE(catr.valor_original, '.', ''), ',', '.'),
+																	{$_valor_original_format},
+																	{$_valor_original_format},
 																	CASE
-																		WHEN 
-																		-- REPLACE(REPLACE(catr.valor_total_aberto_parcela, '.', ''), ',', '.') = 0
-																		REPLACE(catr.valor_total_aberto_parcela, ',', '') = 0
-																		-- WHEN catr.valor_total_aberto_parcela = 0
+																		WHEN {$_valor_total_aberto_format} = 0
 																		THEN 'Cleared'
 																		ELSE 'Uncleared'
 																	END status,
